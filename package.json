@@ -4,9 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build & output:export",
     "start": "next start",
-    "export": "output:export",
     "lint": "next lint"
   },
   "dependencies": {
