@@ -1,6 +1,5 @@
-// pages/dashboard.js
 import { useEffect, useState } from "react";
-import { auth } from "../lib/firebaseConfig";
+import { auth, db } from "../lib/firebaseConfig"; // Ensure db is correctly imported
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/router";
@@ -21,11 +20,11 @@ export default function Dashboard() {
       }
     });
 
-    return unsubscribe; // Cleanup subscription
+    return () => unsubscribe(); // Cleanup subscription
   }, [router]);
 
   const fetchAvailability = async (userId) => {
-    const docRef = doc(firestore, "users", userId);
+    const docRef = doc(db, "users", userId);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
@@ -38,8 +37,7 @@ export default function Dashboard() {
   const updateAvailability = async () => {
     const newAvailability = !availability;
     setAvailability(newAvailability);
-
-    await setDoc(doc(firestore, "users", user.uid), { availability: newAvailability });
+    await setDoc(doc(db, "users", user.uid), { availability: newAvailability }, { merge: true });
   };
 
   const logout = async () => {
@@ -51,11 +49,75 @@ export default function Dashboard() {
     <div>
       <h1>Dashboard</h1>
       <p>{`User ID: ${user ? user.uid : ""}`}</p>
-      <label>
+      <label className="switch">
         <input type="checkbox" checked={availability} onChange={updateAvailability} />
-        Available
+        <span className="slider round"></span>
       </label>
       <button onClick={logout}>Logout</button>
+      <style jsx>{`
+        /* The switch - the box around the slider */
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 60px;
+          height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+
+        /* The slider */
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          -webkit-transition: .4s;
+          transition: .4s;
+        }
+
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 26px;
+          width: 26px;
+          left: 4px;
+          bottom: 4px;
+          background-color: white;
+          -webkit-transition: .4s;
+          transition: .4s;
+        }
+
+        input:checked + .slider {
+          background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+          box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .slider:before {
+          -webkit-transform: translateX(26px);
+          -ms-transform: translateX(26px);
+          transform: translateX(26px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+          border-radius: 34px;
+        }
+
+        .slider.round:before {
+          border-radius: 50%;
+        }
+      `}</style>
     </div>
   );
 }
