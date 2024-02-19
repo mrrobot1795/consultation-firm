@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { auth, db } from "../lib/firebaseConfig"; // Ensure db is correctly imported
+import { auth, firestore } from "../lib/firebaseConfig"; // Ensure this is correctly imported
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/router";
@@ -11,10 +11,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Check for user authentication
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        fetchAvailability(user.uid); // Fetch the current availability status
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        fetchAvailability(currentUser.uid); // Fetch the current availability status
       } else {
         router.push("/signin");
       }
@@ -24,7 +24,7 @@ export default function Dashboard() {
   }, [router]);
 
   const fetchAvailability = async (userId) => {
-    const docRef = doc(db, "users", userId);
+    const docRef = doc(firestore, "users", userId);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
@@ -37,7 +37,9 @@ export default function Dashboard() {
   const updateAvailability = async () => {
     const newAvailability = !availability;
     setAvailability(newAvailability);
-    await setDoc(doc(db, "users", user.uid), { availability: newAvailability }, { merge: true });
+
+    // Correctly reference 'firestore' and use 'setDoc' with the 'merge' option
+    await setDoc(doc(firestore, "users", user.uid), { availability: newAvailability }, { merge: true });
   };
 
   const logout = async () => {
